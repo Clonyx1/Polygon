@@ -12,7 +12,7 @@ public class RasterImage implements Raster<Integer> {
 
     @Override
     public void setPixel(int x, int y, Integer value) {
-        if (x >= 0 && x <= image.getWidth() && y >= 0 && y <= image.getHeight()) {
+        if (x >= 0 && x < image.getWidth() && y >= 0 && y < image.getHeight()) {
             image.setRGB(x, y, value);
         }
     }

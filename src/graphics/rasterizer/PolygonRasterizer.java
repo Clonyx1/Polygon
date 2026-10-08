@@ -19,20 +19,22 @@ public class PolygonRasterizer implements IPolygonRasterizer{
 
         rasterizeLines(lines);
 
-        if(lines.size() > 1){
+        if (lines.size() > 1) {
             Line firstLine = lines.getFirst();
             Line lastLine = lines.getLast();
 
-            Point start = firstLine.getEndPoint();
+            Point start = firstLine.getStartPoint();
             Point end = lastLine.getEndPoint();
             int color = firstLine.getColor();
 
-            lineRasterizerizer.rasterize(new Line(start, end, color));
+            if (start.getX() != end.getX() || start.getY() != end.getY()) {
+                lineRasterizerizer.rasterize(new Line(start, end, color));
+            }
         }
     }
 
-    private void rasterizeLines(List<Line> lines){
-        for(Line line : lines){
+    private void rasterizeLines(List<Line> lines) {
+        for (Line line : lines) {
             lineRasterizerizer.rasterize(line);
         }
     }

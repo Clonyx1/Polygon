@@ -36,31 +36,24 @@ public class Controller {
         this.canvas = canvas;
         this.polygon = new Polygon(new ArrayList<>());
         this.lineRasterizer = new TrivialLineRasterizer(canvas.getRaster());
-        polygonRasterizer = new PolygonRasterizer(lineRasterizer);
+        this.polygonRasterizer = new PolygonRasterizer(lineRasterizer);
     }
 
     /* -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-= Main functions -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=- */
 
     public void init() {
         canvas.clear();
-
-        //Pro účely testování vykreslení úsečky
-        Line line = new Line(new Point(0, 150), new Point(200, 225), LINE_COLOR);
-
-        lineRasterizer.rasterize(line);
-
-        canvas.addMouseListener(new MouseAdapter() {
-         @Override
-         public void mousePressed(MouseEvent e) {
-             super.mousePressed(e);
-         }
-        });
+        polygon.getLines().clear();
+        previewLine = null;
 
         canvas.addKeyListener(new KeyAdapter() {
             @Override
             public void keyPressed(KeyEvent e) {
-                if(e.getKeyCode() == KeyEvent.VK_C){
+                if (e.getKeyCode() == KeyEvent.VK_C) {
+                    polygon.getLines().clear();
+                    previewLine = null;
                     canvas.clear();
+                    render();
                 }
             }
         });
@@ -68,48 +61,74 @@ public class Controller {
         canvas.addMouseListener(new MouseAdapter() {
             @Override
             public void mousePressed(MouseEvent e) {
-                if(e.getButton() == MouseEvent.BUTTON1){
-                    startLine(e); //Při stisku tlačítka na myši se začne kreslit čára (měl by být preview)
+                if (e.getButton() == MouseEvent.BUTTON1) {
+                    startLine(e);
                 }
             }
 
             @Override
-            public void mouseReleased(MouseEvent e){
-                finishPolygon(); //Když se pustí myš tak se čára vykreslí
+            public void mouseReleased(MouseEvent e) {
+                finishPolygon();
             }
         });
 
         canvas.addMouseMotionListener(new MouseAdapter() {
             @Override
             public void mouseDragged(MouseEvent e) {
-                //TODO: Zobrazit preview čáru
+                if (previewLine != null) {
+                    Point current = getMousePosition(e);
+                    previewLine = new Line(previewLine.getStartPoint(), current, PREVIEW_COLOR);
+                    render();
+                }
             }
         });
 
+        //Požadání o focus hned po inicializaci
+        canvas.requestFocusInWindow();
         canvas.repaint();
     }
 
-    public void render(){
+    public void render() {
         canvas.clear();
-
         polygonRasterizer.rasterize(polygon);
 
+        if (previewLine != null) {
+            lineRasterizer.rasterize(previewLine);
+        }
+
         canvas.repaint();
     }
 
-    private void startLine(MouseEvent e){
-        //TODO: Vzít poslední bod polygonu
-        //Vzít getPoint(e) - aktuální bod
-        //previewLine = new Line(startPoint, lastPoint, preview barva);
-        render(); //Aby se vykreslil polygon
+    private void startLine(MouseEvent e) {
+        Point currentPoint = getMousePosition(e);
+
+        if (polygon.getLines().isEmpty()) {
+            previewLine = new Line(currentPoint, currentPoint, PREVIEW_COLOR);
+        } else {
+            Point startPoint = polygon.getLines().get(polygon.getLines().size() - 1).getEndPoint();
+            previewLine = new Line(startPoint, currentPoint, PREVIEW_COLOR);
+        }
+
+        render();
     }
 
-    private void finishPolygon(){
+    private void finishPolygon() {
+        if (previewLine == null) {
+            return;
+        }
+
+        Point start = previewLine.getStartPoint();
+        Point end = previewLine.getEndPoint();
+
+        if (start.getX() != end.getX() || start.getY() != end.getY()) {
+            polygon.getLines().add(new Line(start, end, LINE_COLOR));
+        }
+
         previewLine = null;
         render();
     }
 
-    private Point getMousePosition(MouseEvent e){
+    private Point getMousePosition(MouseEvent e) {
         return new Point(e.getX(), e.getY());
     }
 }
