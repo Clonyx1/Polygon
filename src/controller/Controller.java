@@ -15,8 +15,10 @@ import java.awt.event.MouseEvent;
 import java.util.ArrayList;
 
 /**
- * Handles user input and controls the application flow related to the {@link Canvas}.
- * The controller coordinates input events, canvas operations, and rendering updates.
+ * Handles user input and controls the application flow related to the
+ * {@link Canvas}.
+ * The controller coordinates input events, canvas operations, and rendering
+ * updates.
  *
  * @author PGRF FIM UHK
  * @version 2026
@@ -30,16 +32,12 @@ public class Controller {
     private static final int LINE_COLOR = Color.WHITE.getRGB();
     private static final int PREVIEW_COLOR = Color.RED.getRGB();
 
-    /* -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=- Constructors -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-= */
-
     public Controller(Canvas canvas) {
         this.canvas = canvas;
         this.polygon = new Polygon(new ArrayList<>());
         this.lineRasterizer = new TrivialLineRasterizer(canvas.getRaster());
         this.polygonRasterizer = new PolygonRasterizer(lineRasterizer);
     }
-
-    /* -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-= Main functions -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=- */
 
     public void init() {
         canvas.clear();
@@ -76,14 +74,18 @@ public class Controller {
             @Override
             public void mouseDragged(MouseEvent e) {
                 if (previewLine != null) {
-                    Point current = getMousePosition(e);
-                    previewLine = new Line(previewLine.getStartPoint(), current, PREVIEW_COLOR);
+                    // Current mouse position (can be outside of canvas)
+                    Point mousePos = getMousePosition(e);
+                    // Point to use for rendering (must be inside of canvas)
+                    Point renderPos = getRenderPosition(mousePos);
+
+                    previewLine = new Line(previewLine.getStartPoint(), renderPos, PREVIEW_COLOR);
                     render();
                 }
             }
         });
 
-        //Požadání o focus hned po inicializaci
+        //Ask focus on initialization
         canvas.requestFocusInWindow();
         canvas.repaint();
     }
@@ -100,13 +102,13 @@ public class Controller {
     }
 
     private void startLine(MouseEvent e) {
-        Point currentPoint = getMousePosition(e);
+        Point mousePos = getMousePosition(e);
 
         if (polygon.getLines().isEmpty()) {
-            previewLine = new Line(currentPoint, currentPoint, PREVIEW_COLOR);
+            previewLine = new Line(mousePos, mousePos, PREVIEW_COLOR);
         } else {
             Point startPoint = polygon.getLines().get(polygon.getLines().size() - 1).getEndPoint();
-            previewLine = new Line(startPoint, currentPoint, PREVIEW_COLOR);
+            previewLine = new Line(startPoint, mousePos, PREVIEW_COLOR);
         }
 
         render();
@@ -130,5 +132,35 @@ public class Controller {
 
     private Point getMousePosition(MouseEvent e) {
         return new Point(e.getX(), e.getY());
+    }
+
+    private Point getRenderPosition(Point mousePos) {
+        Point renderPos = new Point(mousePos.getX(), mousePos.getY());
+        if(xOutOfBounds(renderPos.getX())){
+            int x = renderPos.getX() < 0 ? 0 : canvas.getRaster().getWidth() - 1;
+            renderPos = new Point(x, renderPos.getY());
+        }
+        if(yOutOfBounds(renderPos.getY())){
+            int y = renderPos.getY() < 0 ? 0 : canvas.getRaster().getHeight() - 1;
+            renderPos = new Point(renderPos.getX(), y);
+        }
+
+        return renderPos;
+    }
+
+    private boolean xOutOfBounds(int x){
+        if(x < 0 || x >= canvas.getRaster().getWidth()){
+            return true;
+        }
+        
+        return false;
+    }
+
+    private boolean yOutOfBounds(int y){
+        if(y < 0 || y >= canvas.getRaster().getHeight()){
+            return true;
+        }
+
+        return false;
     }
 }
