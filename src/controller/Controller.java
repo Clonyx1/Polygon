@@ -1,7 +1,6 @@
 package controller;
 
-import graphics.rasterizer.PolygonRasterizer;
-import graphics.rasterizer.TrivialLineRasterizer;
+import graphics.renderer.PolygonRenderer;
 import model.Line;
 import model.Point;
 import model.Polygon;
@@ -27,16 +26,14 @@ public class Controller {
     private final Polygon polygon;
     private final Canvas canvas;
     private Line previewLine;
-    private final TrivialLineRasterizer lineRasterizer;
-    private final PolygonRasterizer polygonRasterizer;
+    private final PolygonRenderer polygonRenderer;
     private static final int LINE_COLOR = Color.WHITE.getRGB();
     private static final int PREVIEW_COLOR = Color.RED.getRGB();
 
     public Controller(Canvas canvas) {
         this.canvas = canvas;
         this.polygon = new Polygon(new ArrayList<>());
-        this.lineRasterizer = new TrivialLineRasterizer(canvas.getRaster());
-        this.polygonRasterizer = new PolygonRasterizer(lineRasterizer);
+        this.polygonRenderer = new PolygonRenderer(canvas);
     }
 
     public void init() {
@@ -51,7 +48,7 @@ public class Controller {
                     polygon.getLines().clear();
                     previewLine = null;
                     canvas.clear();
-                    render();
+                    polygonRenderer.render(polygon, previewLine);
                 }
             }
         });
@@ -80,24 +77,13 @@ public class Controller {
                     Point renderPos = getRenderPosition(mousePos);
 
                     previewLine = new Line(previewLine.getStartPoint(), renderPos, PREVIEW_COLOR);
-                    render();
+                    polygonRenderer.render(polygon, previewLine);
                 }
             }
         });
 
         //Ask focus on initialization
         canvas.requestFocusInWindow();
-        canvas.repaint();
-    }
-
-    public void render() {
-        canvas.clear();
-        polygonRasterizer.rasterize(polygon);
-
-        if (previewLine != null) {
-            lineRasterizer.rasterize(previewLine);
-        }
-
         canvas.repaint();
     }
 
@@ -111,7 +97,7 @@ public class Controller {
             previewLine = new Line(startPoint, mousePos, PREVIEW_COLOR);
         }
 
-        render();
+        polygonRenderer.render(polygon, previewLine);
     }
 
     private void finishPolygon() {
@@ -127,7 +113,7 @@ public class Controller {
         }
 
         previewLine = null;
-        render();
+        polygonRenderer.render(polygon, previewLine);
     }
 
     private Point getMousePosition(MouseEvent e) {
