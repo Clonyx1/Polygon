@@ -13,7 +13,6 @@ import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.util.ArrayList;
-import java.util.List;
 
 /**
  * Handles user input and controls the application flow related to the {@link Canvas}.
@@ -45,6 +44,11 @@ public class Controller {
     public void init() {
         canvas.clear();
 
+        //Pro účely testování vykreslení úsečky
+        Line line = new Line(new Point(0, 150), new Point(200, 225), LINE_COLOR);
+
+        lineRasterizer.rasterize(line);
+
         canvas.addMouseListener(new MouseAdapter() {
          @Override
          public void mousePressed(MouseEvent e) {
@@ -55,7 +59,6 @@ public class Controller {
         canvas.addKeyListener(new KeyAdapter() {
             @Override
             public void keyPressed(KeyEvent e) {
-                //TODO: Zkontrolovat jestli maže canvas při stisknutí klávesy C
                 if(e.getKeyCode() == KeyEvent.VK_C){
                     canvas.clear();
                 }

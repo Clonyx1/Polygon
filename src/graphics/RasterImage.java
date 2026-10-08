@@ -3,7 +3,7 @@ package graphics;
 import java.awt.*;
 import java.awt.image.BufferedImage;
 
-public class RasterImage implements  Raster<Integer>{
+public class RasterImage implements Raster<Integer> {
     private final BufferedImage image;
 
     public RasterImage(int width, int height) {
@@ -12,7 +12,7 @@ public class RasterImage implements  Raster<Integer>{
 
     @Override
     public void setPixel(int x, int y, Integer value) {
-        if(x >= 0 && x<= image.getWidth() && y >= 0 && y <= image.getHeight()) {
+        if (x >= 0 && x <= image.getWidth() && y >= 0 && y <= image.getHeight()) {
             image.setRGB(x, y, value);
         }
     }

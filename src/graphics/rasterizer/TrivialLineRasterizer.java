@@ -17,46 +17,33 @@ public class TrivialLineRasterizer implements ILineRasterizer {
         Point start = line.getStartPoint();
         Point end = line.getEndPoint();
 
-        midPoint(start.getX(), end.getX(), start.getY(), end.getY(), line.getColor());
+        Point a = new Point(start.getX(), start.getY());
+        Point b = new Point(end.getX(), end.getY());
+
+        rasterizeSegment(a, b, line.getColor());
     }
 
-    private void midPoint(int x1, int y1, int x2, int y2, int color)
+
+    //Použit midpoint algoritmus implementován podle pseudokódu v prezentaci
+    private void rasterizeSegment(Point a, Point b, int color)
     {
-        // calculate dx & dy
-        int dx = x2 - x1;
-        int dy = y2 - y1;
+        if(Math.abs(b.getX() - a.getX()) > 1 || Math.abs(b.getY() - a.getY()) > 1){
+            midPoint(a, b, color);
+        }
 
-        // initial value of decision
-        // parameter d
-        int d = dy - (dx/2);
-        int x = x1, y = y1;
+    }
+    private void midPoint(Point a, Point b, int color){
+        int mx = (a.getX() + b.getX()) / 2;
+        int my = (a.getY() + b.getY()) / 2;
+        Point middlePoint = new Point(mx, my);
 
-        // Plot initial given point
-        // putpixel(x,y) can be used to
-        // print pixel of line in graphics
+        raster.setPixel(middlePoint.getX(), middlePoint.getY(), color);
 
-        // iterate through value of X
-        while (x < x2)
-        {
-            x++;
-
-            // E or East is chosen
-            if (d < 0)
-                d = d + dy;
-
-                // NE or North East is chosen
-            else
-            {
-                d += (dy - dx);
-                y++;
-            }
-
-            // Plot intermediate points
-            // putpixel(x,y) is used to print
-            // pixel of line in graphics
-            System.out.print(x +"," + y + "\n");
-            raster.setPixel(x, y, color);
+        if(Math.abs(a.getX() - mx) > 1 || Math.abs(a.getY() - my) > 1){
+            midPoint(a, middlePoint, color);
+        }
+        if(Math.abs(b.getX() - mx) > 1 || Math.abs(b.getY() - my) > 1){
+            midPoint(middlePoint, b, color);
         }
     }
-
 }
