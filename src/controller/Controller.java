@@ -30,6 +30,7 @@ public class Controller {
     private final PolygonRenderer polygonRenderer;
     private static final int LINE_COLOR = Color.WHITE.getRGB();
     private static final int PREVIEW_COLOR = Color.RED.getRGB();
+    private static final int CLOSE_SNAP_DISTANCE = 2;
 
     public Controller(Canvas canvas) {
         this.canvas = canvas;
@@ -62,7 +63,7 @@ public class Controller {
                     startLine(e);
                 }
                 if (e.getButton() == MouseEvent.BUTTON3) {
-                    lightClosestPoint(e);
+                    moveClosestPoint(e);
                 }
             }
 
@@ -79,7 +80,7 @@ public class Controller {
                     // Current mouse position (can be outside of canvas)
                     Point mousePos = getMousePosition(e);
                     // Point to use for rendering (must be inside of canvas)
-                    Point renderPos = getRenderPosition(mousePos);
+                    Point renderPos = snapToFirstPoint(getRenderPosition(mousePos));
 
                     previewLine = new Line(previewLine.getStartPoint(), renderPos, PREVIEW_COLOR);
                     polygonRenderer.render(polygon, previewLine);
@@ -92,42 +93,61 @@ public class Controller {
         canvas.repaint();
     }
 
-    private void lightClosestPoint(MouseEvent e) {
+    private void moveClosestPoint(MouseEvent e) {
         Point mousePos = getMousePosition(e);
         List<Line> lines = polygon.getLines();
 
-        if(lines.isEmpty()) {
+        if (lines.isEmpty()) {
             return;
         }
 
-        Line closestLine = findClosestLine(mousePos, lines);
-        Point closestPoint = closestLine.getStartPoint() == mousePos ? closestLine.getStartPoint() : closestLine.getEndPoint();
-        canvas.getRaster().setPixel(closestPoint.getX(), closestPoint.getY(), PREVIEW_COLOR);
+        Point closestPoint = findClosestPoint(mousePos, lines);
+
+        for (int i = 0; i < lines.size(); i++) {
+            Line line = lines.get(i);
+            if (line.getStartPoint().equals(closestPoint)) {
+                line = new Line(mousePos, line.getEndPoint(), LINE_COLOR);
+                lines.set(i, line);
+            }
+            if(line.getEndPoint().equals(closestPoint)) {
+                line = new Line(line.getStartPoint(), mousePos, LINE_COLOR);
+                lines.set(i, line);
+            }
+        }
+        
+        polygonRenderer.render(polygon, previewLine);
         canvas.repaint();
     }
 
-    private Line findClosestLine(Point mousePos, List<Line> lines) {
-        Line closestLine = null;
+    private Point findClosestPoint(Point mousePos, List<Line> lines) {
+        Point closestPoint = null;
         double minDistance = Double.MAX_VALUE;
 
         for (Line line : lines) {
-            double distance = distanceToLine(mousePos, line);
-            if (distance < minDistance) {
-                minDistance = distance;
-                closestLine = line;
+            Point start = line.getStartPoint();
+            double startDistance = distanceBetween(mousePos, start);
+            if (startDistance < minDistance) {
+                minDistance = startDistance;
+                closestPoint = start;
+            }
+
+            Point end = line.getEndPoint();
+            double endDistance = distanceBetween(mousePos, end);
+            if (endDistance < minDistance) {
+                minDistance = endDistance;
+                closestPoint = end;
             }
         }
 
-        return closestLine;
+        return closestPoint;
     }
 
-    private double distanceToLine(Point mousePos, Line line) {
-
-        return line.distanceToPoint(mousePos);
+    private double distanceBetween(Point first, Point second) {
+        return Math.hypot(first.getX() - second.getX(), first.getY() - second.getY());
     }
 
     private void startLine(MouseEvent e) {
-        Point mousePos = getMousePosition(e);
+        Point mousePos = snapToFirstPoint(getRenderPosition(getMousePosition(e)));
 
         if (polygon.getLines().isEmpty()) {
             previewLine = new Line(mousePos, mousePos, PREVIEW_COLOR);
@@ -137,6 +157,20 @@ public class Controller {
         }
 
         polygonRenderer.render(polygon, previewLine);
+    }
+
+    private Point snapToFirstPoint(Point point) {
+        List<Line> lines = polygon.getLines();
+        if (lines.size() < 2) {
+            return point;
+        }
+
+        Point firstPoint = lines.getFirst().getStartPoint();
+        if (distanceBetween(point, firstPoint) <= CLOSE_SNAP_DISTANCE) {
+            return firstPoint;
+        }
+
+        return point;
     }
 
     private void finishPolygon() {
