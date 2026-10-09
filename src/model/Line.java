@@ -22,4 +22,11 @@ public class Line {
     public int getColor() {
         return color;
     }
+
+    public double distanceToPoint(Point point) {
+        // |AB| = sqrt((x2 - x1)^2 + (y2 - y1)^2)
+        double distanceToStart = Math.sqrt(Math.pow(point.getX() - startPoint.getX(), 2) + Math.pow(point.getY() - startPoint.getY(), 2));
+        double distanceToEnd = Math.sqrt(Math.pow(point.getX() - endPoint.getX(), 2) + Math.pow(point.getY() - endPoint.getY(), 2));
+        return Math.min(distanceToStart, distanceToEnd);
+    }
 }

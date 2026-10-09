@@ -12,6 +12,7 @@ import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Handles user input and controls the application flow related to the
@@ -56,8 +57,12 @@ public class Controller {
         canvas.addMouseListener(new MouseAdapter() {
             @Override
             public void mousePressed(MouseEvent e) {
+                // Left click
                 if (e.getButton() == MouseEvent.BUTTON1) {
                     startLine(e);
+                }
+                if (e.getButton() == MouseEvent.BUTTON3) {
+                    lightClosestPoint(e);
                 }
             }
 
@@ -82,9 +87,43 @@ public class Controller {
             }
         });
 
-        //Ask focus on initialization
+        // Ask focus on initialization
         canvas.requestFocusInWindow();
         canvas.repaint();
+    }
+
+    private void lightClosestPoint(MouseEvent e) {
+        Point mousePos = getMousePosition(e);
+        List<Line> lines = polygon.getLines();
+
+        if(lines.isEmpty()) {
+            return;
+        }
+
+        Line closestLine = findClosestLine(mousePos, lines);
+        Point closestPoint = closestLine.getStartPoint() == mousePos ? closestLine.getStartPoint() : closestLine.getEndPoint();
+        canvas.getRaster().setPixel(closestPoint.getX(), closestPoint.getY(), PREVIEW_COLOR);
+        canvas.repaint();
+    }
+
+    private Line findClosestLine(Point mousePos, List<Line> lines) {
+        Line closestLine = null;
+        double minDistance = Double.MAX_VALUE;
+
+        for (Line line : lines) {
+            double distance = distanceToLine(mousePos, line);
+            if (distance < minDistance) {
+                minDistance = distance;
+                closestLine = line;
+            }
+        }
+
+        return closestLine;
+    }
+
+    private double distanceToLine(Point mousePos, Line line) {
+
+        return line.distanceToPoint(mousePos);
     }
 
     private void startLine(MouseEvent e) {
@@ -122,11 +161,11 @@ public class Controller {
 
     private Point getRenderPosition(Point mousePos) {
         Point renderPos = new Point(mousePos.getX(), mousePos.getY());
-        if(xOutOfBounds(renderPos.getX())){
+        if (xOutOfBounds(renderPos.getX())) {
             int x = renderPos.getX() < 0 ? 0 : canvas.getRaster().getWidth() - 1;
             renderPos = new Point(x, renderPos.getY());
         }
-        if(yOutOfBounds(renderPos.getY())){
+        if (yOutOfBounds(renderPos.getY())) {
             int y = renderPos.getY() < 0 ? 0 : canvas.getRaster().getHeight() - 1;
             renderPos = new Point(renderPos.getX(), y);
         }
@@ -134,16 +173,16 @@ public class Controller {
         return renderPos;
     }
 
-    private boolean xOutOfBounds(int x){
-        if(x < 0 || x >= canvas.getRaster().getWidth()){
+    private boolean xOutOfBounds(int x) {
+        if (x < 0 || x >= canvas.getRaster().getWidth()) {
             return true;
         }
-        
+
         return false;
     }
 
-    private boolean yOutOfBounds(int y){
-        if(y < 0 || y >= canvas.getRaster().getHeight()){
+    private boolean yOutOfBounds(int y) {
+        if (y < 0 || y >= canvas.getRaster().getHeight()) {
             return true;
         }
 
