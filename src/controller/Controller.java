@@ -65,6 +65,11 @@ public class Controller {
                     startLine(e);
                     draggingLeft = true;
                 }
+                if (e.getButton() == MouseEvent.BUTTON2) {
+                    addMiddlePoint(e);
+                }
+
+                // Right click
                 if (e.getButton() == MouseEvent.BUTTON3) {
                     draggingRight = true;
                 }
@@ -91,7 +96,7 @@ public class Controller {
                     previewLine = new Line(previewLine.getStartPoint(), renderPos, PREVIEW_COLOR);
                     polygonRenderer.render(polygon, previewLine);
                 }
-                if(draggingRight){
+                if (draggingRight) {
                     moveClosestPoint(e);
                 }
             }
@@ -104,6 +109,7 @@ public class Controller {
 
     private void moveClosestPoint(MouseEvent e) {
         Point mousePos = getMousePosition(e);
+        Point renderPos = getRenderPosition(mousePos);
         List<Line> lines = polygon.getLines();
 
         if (lines.isEmpty()) {
@@ -115,17 +121,49 @@ public class Controller {
         for (int i = 0; i < lines.size(); i++) {
             Line line = lines.get(i);
             if (line.getStartPoint().equals(closestPoint)) {
-                line = new Line(mousePos, line.getEndPoint(), LINE_COLOR);
+                line = new Line(renderPos, line.getEndPoint(), LINE_COLOR);
                 lines.set(i, line);
             }
-            if(line.getEndPoint().equals(closestPoint)) {
-                line = new Line(line.getStartPoint(), mousePos, LINE_COLOR);
+            if (line.getEndPoint().equals(closestPoint)) {
+                line = new Line(line.getStartPoint(), renderPos, LINE_COLOR);
                 lines.set(i, line);
             }
         }
-        
+
         polygonRenderer.render(polygon, previewLine);
         canvas.repaint();
+    }
+
+    private void addMiddlePoint(MouseEvent e) {
+        Line line = findClosestLine(getMousePosition(e), polygon.getLines());
+        if (line != null) {
+            Point middlePoint = getMiddlePoint(line.getStartPoint(), line.getEndPoint());
+            Line newLine1 = new Line(line.getStartPoint(), middlePoint, LINE_COLOR);
+            Line newLine2 = new Line(middlePoint, line.getEndPoint(), LINE_COLOR);
+            for (int i = 0; i < polygon.getLines().size(); i++) {
+                if (polygon.getLines().get(i).equals(line)) {
+                    polygon.getLines().set(i, newLine1);
+                    polygon.getLines().add(i + 1, newLine2);
+                    break;
+                }
+            }
+            polygonRenderer.render(polygon, previewLine);
+        }
+    }
+    
+    private Line findClosestLine(Point mousePos, List<Line> lines) {
+        Line closestLine = null;
+        double minDistance = Double.MAX_VALUE;
+
+        for (Line line : lines) {
+            double distance = line.distanceToPoint(mousePos);
+            if (distance < minDistance) {
+                minDistance = distance;
+                closestLine = line;
+            }
+        }
+
+        return closestLine;
     }
 
     private Point findClosestPoint(Point mousePos, List<Line> lines) {
@@ -213,6 +251,12 @@ public class Controller {
         }
 
         return renderPos;
+    }
+
+    private Point getMiddlePoint(Point a, Point b) {
+        int mx = (a.getX() + b.getX()) / 2;
+        int my = (a.getY() + b.getY()) / 2;
+        return new Point(mx, my);
     }
 
     private boolean xOutOfBounds(int x) {

@@ -24,7 +24,7 @@ public class TrivialLineRasterizer implements ILineRasterizer {
     }
 
 
-    //Použit midpoint algoritmus implementován podle pseudokódu v prezentaci
+    //Midpoint algorithm implemented according to the pseudocode in the presentation
     private void rasterizeSegment(Point a, Point b, int color)
     {
         if(Math.abs(b.getX() - a.getX()) > 1 || Math.abs(b.getY() - a.getY()) > 1){
