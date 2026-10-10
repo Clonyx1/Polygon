@@ -4,7 +4,7 @@ public class Point {
     private final int x;
     private final int y;
 
-    public Point(int x, int y){
+    public Point(int x, int y) {
         this.x = x;
         this.y = y;
     }
@@ -17,7 +17,11 @@ public class Point {
         return y;
     }
 
-    @Override 
+    public double distanceBetween(Point point) {
+        return Math.hypot(this.getX() - point.getX(), this.getY() - point.getY());
+    }
+
+    @Override
     public boolean equals(Object obj) {
         if (this == obj) {
             return true;

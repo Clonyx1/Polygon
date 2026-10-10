@@ -28,9 +28,25 @@ public class Line {
     }
 
     public double distanceToPoint(Point point) {
-        // |AB| = sqrt((x2 - x1)^2 + (y2 - y1)^2)
-        double distanceToStart = Math.sqrt(Math.pow(point.getX() - startPoint.getX(), 2) + Math.pow(point.getY() - startPoint.getY(), 2));
-        double distanceToEnd = Math.sqrt(Math.pow(point.getX() - endPoint.getX(), 2) + Math.pow(point.getY() - endPoint.getY(), 2));
-        return Math.min(distanceToStart, distanceToEnd);
+        //vector
+        double dx = endPoint.getX() - startPoint.getX();
+        double dy = endPoint.getY() - startPoint.getY();
+        //|AB|^2
+        double lengthSquared = dx * dx + dy * dy;
+
+        if (lengthSquared == 0) {
+            return startPoint.distanceBetween(point);
+        }
+        //t = (P-A*AB) / |AB|^2
+        double t = ((point.getX() - startPoint.getX()) * dx
+                + (point.getY() - startPoint.getY()) * dy) / lengthSquared;
+        //Make sure point is on the line segment
+        //Is 0-1, works as percentage of the line segment length, where 0 is startPoint and 1 is endPoint
+        t = Math.max(0, Math.min(1, t));
+
+        double closestX = startPoint.getX() + t * dx;
+        double closestY = startPoint.getY() + t * dy;
+        //Euclidean distance from point to closest point on the line segment
+        return Math.hypot(point.getX() - closestX, point.getY() - closestY);
     }
 }
