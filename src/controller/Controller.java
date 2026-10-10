@@ -28,6 +28,8 @@ public class Controller {
     private final Canvas canvas;
     private Line previewLine;
     private final PolygonRenderer polygonRenderer;
+    private boolean draggingLeft = false;
+    private boolean draggingRight = false;
     private static final int LINE_COLOR = Color.WHITE.getRGB();
     private static final int PREVIEW_COLOR = Color.RED.getRGB();
     private static final int CLOSE_SNAP_DISTANCE = 2;
@@ -61,22 +63,26 @@ public class Controller {
                 // Left click
                 if (e.getButton() == MouseEvent.BUTTON1) {
                     startLine(e);
+                    draggingLeft = true;
                 }
                 if (e.getButton() == MouseEvent.BUTTON3) {
-                    moveClosestPoint(e);
+                    draggingRight = true;
                 }
             }
 
             @Override
             public void mouseReleased(MouseEvent e) {
+                draggingLeft = false;
+                draggingRight = false;
                 finishPolygon();
+                previewLine = null;
             }
         });
 
         canvas.addMouseMotionListener(new MouseAdapter() {
             @Override
             public void mouseDragged(MouseEvent e) {
-                if (previewLine != null) {
+                if (previewLine != null && draggingLeft) {
                     // Current mouse position (can be outside of canvas)
                     Point mousePos = getMousePosition(e);
                     // Point to use for rendering (must be inside of canvas)
@@ -84,6 +90,9 @@ public class Controller {
 
                     previewLine = new Line(previewLine.getStartPoint(), renderPos, PREVIEW_COLOR);
                     polygonRenderer.render(polygon, previewLine);
+                }
+                if(draggingRight){
+                    moveClosestPoint(e);
                 }
             }
         });
@@ -185,8 +194,7 @@ public class Controller {
             polygon.getLines().add(new Line(start, end, LINE_COLOR));
         }
 
-        previewLine = null;
-        polygonRenderer.render(polygon, previewLine);
+        polygonRenderer.render(polygon, null);
     }
 
     private Point getMousePosition(MouseEvent e) {
